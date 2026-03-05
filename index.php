@@ -5,12 +5,12 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Mon Pokédex</title>
     <link rel="stylesheet" href="style.css">
-    <link rel="icon" href=<?php $data['sprites']['front_default']?>>
+    <link rel="icon" type="image/svg+xml" href="./Ressources/PokeBall_icon.ico">
 </head>
 <body>
 
 <header>
-    <h1>Mon Pokédex</h1>
+    <h1><a href="index.php"> Mon Pokedex </a></h1>
     <p>Recherchez un Pokémon par nom ou numéro</p>
 </header>
 
@@ -21,11 +21,27 @@
             type="text"
             name="pokemon"
             placeholder="Ex: pikachu, 25, bulbasaur..."
-            value="<?= htmlspecialchars($_GET['pokemon'] ?? '') ?>"
+            value="<?php echo$_GET['pokemon'] ?? '' ?>"
         >
         <button type="submit">Rechercher</button>
     </form>
 </div>
+<div>
+    <form method="GET" action="">
+        <?php
+            if(!empty($_GET['pokemon'])){
+                echo '<input type="hidden" name="pokemon" value="' . htmlspecialchars($_GET["pokemon"]) . '">';
+            }
+            if(isset($_GET['sprite']) && $_GET['sprite'] === 'gif'){
+                echo "<button type='submit' name='sprite' value='png'>Afficher les PNG</button>";
+            }else{
+                echo "<button type='submit' name='sprite' value='gif'>Afficher les GIF</button>";
+            }
+        ?>
+    </form>
+</div>
+
+
 
 <?php
 
@@ -46,12 +62,12 @@ function getPokemon($nom) {
 
 function getItem($itemName){
     $itemName = strtolower(trim($itemName));
-    $url = "//pokeapi.co/api/v2/item/" . urlencode($itemName);
+    $url = "https://pokeapi.co/api/v2/item/" . urlencode($itemName);
 
     $json = @file_get_contents($url);
 
     if ($json === false) {
-        return null; // Pokémon introuvable
+        return null; // Item introuvable
     }
     return json_decode($json, true);
 }
@@ -86,18 +102,18 @@ if (!empty($_GET['pokemon'])) {
         ?>
 
         <div class="pokemon-card">
-            <p class="pokemon-id">#<?= str_pad($id, 3, '0', STR_PAD_LEFT) ?></p>
-            <h2><?= htmlspecialchars($nom) ?></h2>
+            <p class="pokemon-id">#<?php echo str_pad($id, 3, '0', STR_PAD_LEFT) ?></p>
+            <h2><?php $nom ?></h2>
 
             <?php if ($sprite): ?>
-                <img src="<?= $sprite ?>" alt="<?= htmlspecialchars($nom) ?>">
+                <img src="<?php echo $sprite ?>" alt="<?php  echo $nom ?>">
             <?php endif; ?>
 
             <!-- Types -->
             <div class="types">
                 <?php foreach ($types as $t): ?>
-                    <span class="type type-<?= $t['type']['name'] ?>">
-                        <?= $t['type']['name'] ?>
+                    <span class="type type-<?php echo $t['type']['name'] ?>">
+                        <?php echo $t['type']['name'] ?>
                     </span>
                 <?php endforeach; ?>
             </div>
@@ -106,15 +122,15 @@ if (!empty($_GET['pokemon'])) {
             <div class="info-row">
                 <div class="info-item">
                     <span>Taille</span>
-                    <strong><?= $taille ?> m</strong>
+                    <strong><?php echo $taille ?> m</strong>
                 </div>
                 <div class="info-item">
                     <span>Poids</span>
-                    <strong><?= $poids ?> kg</strong>
+                    <strong><?php echo $poids ?> kg</strong>
                 </div>
                 <div class="info-item">
                     <span>Expérience</span>
-                    <strong><?= $data['base_experience'] ?? '?' ?></strong>
+                    <strong><?php echo $data['base_experience'] ?? '?' ?></strong>
                 </div>
             </div>
 
@@ -124,11 +140,11 @@ if (!empty($_GET['pokemon'])) {
                 <?php foreach ($stats as $stat): ?>
                     <?php $valeur = $stat['base_stat']; ?>
                     <div class="stat">
-                        <span class="stat-name"><?= nomStat($stat['stat']['name']) ?></span>
+                        <span class="stat-name"><?php echo nomStat($stat['stat']['name']) ?></span>
                         <div class="stat-bar-bg">
-                            <div class="stat-bar" style="width: <?= min($valeur, 150) / 150 * 100 ?>%"></div>
+                            <div class="stat-bar" style="width: <?php echo min($valeur, 150) / 150 * 100 ?>%"></div>
                         </div>
-                        <span class="stat-value"><?= $valeur ?></span>
+                        <span class="stat-value"><?php echo $valeur ?></span>
                     </div>
                 <?php endforeach; ?>
             </div>
@@ -138,22 +154,30 @@ if (!empty($_GET['pokemon'])) {
     }
 }
 
-// Afficher les 20 premiers Pokémon en grille
-$listeJson = @file_get_contents("https://pokeapi.co/api/v2/pokemon?limit=500");
+// Afficher les Pokémon en grille
+$listeJson = @file_get_contents("https://pokeapi.co/api/v2/pokemon?limit=1025");
 if ($listeJson) {
     $liste = json_decode($listeJson, true);
     ?>
     <div class="grid-section">
-        <h2>Les 20 premiers Pokémon</h2>
+        <h2>Les Pokémon</h2>
         <div class="pokemon-grid">
             <?php foreach ($liste['results'] as $index => $p):
                 $numero = $index + 1;
-                $spriteUrl = "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/" . $numero . ".png";
+                
+                if (isset($_GET['sprite']) && $_GET['sprite']==='gif') {
+                    $spriteUrl = "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/showdown/" . $numero . ".gif";
+
+                } else {
+                    $spriteUrl = "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/" . $numero . ".png";
+
+                }
+
             ?>
-                <a class="mini-card" href="?pokemon=<?= $p['name'] ?>">
-                    <img src="<?= $spriteUrl ?>" alt="<?= $p['name'] ?>">
-                    <p>#<?= str_pad($numero, 3, '0', STR_PAD_LEFT) ?></p>
-                    <strong><?= $p['name'] ?></strong>
+                <a class="mini-card" href="?pokemon=<?php echo $p['name'] ?>">
+                    <img src="<?php echo $spriteUrl ?>" alt="<?php echo $p['name'] ?>">
+                    <p>#<?php echo str_pad($numero, 3, '0', STR_PAD_LEFT) ?></p>
+                    <strong><?php echo $p['name'] ?></strong>
                 </a>
             <?php endforeach; ?>
         </div>
