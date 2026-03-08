@@ -21,20 +21,20 @@
             type="text"
             name="pokemon"
             placeholder="Ex: pikachu, 25, bulbasaur..."
-            value="<?php echo$_GET['pokemon'] ?? '' ?>"
+            value="<?php if(isset($_GET['pokemon'])) { echo $_GET['pokemon']; } ?>"
         >
         <button type="submit">Rechercher</button>
     </form>
 </div>
-<div>
+<div class="search-bar">
     <form method="GET" action="">
         <?php
-            if(!empty($_GET['pokemon'])){
+            if(!empty($_GET['pokemon'])) {
                 echo '<input type="hidden" name="pokemon" value="' . htmlspecialchars($_GET["pokemon"]) . '">';
             }
-            if(isset($_GET['sprite']) && $_GET['sprite'] === 'gif'){
+            if(isset($_GET['sprite']) && $_GET['sprite'] === 'gif') {
                 echo "<button type='submit' name='sprite' value='png'>Afficher les PNG</button>";
-            }else{
+            } else {
                 echo "<button type='submit' name='sprite' value='gif'>Afficher les GIF</button>";
             }
         ?>
@@ -53,20 +53,20 @@ function getPokemon($nom) {
     // Appel à l'API avec file_get_contents
     $json = @file_get_contents($url);
 
-    if ($json === false) {
+    if ($json == false) {
         return null; // Pokémon introuvable
     }
 
     return json_decode($json, true);
 }
 
-function getItem($itemName){
+function getItem($itemName) {
     $itemName = strtolower(trim($itemName));
     $url = "https://pokeapi.co/api/v2/item/" . urlencode($itemName);
 
     $json = @file_get_contents($url);
 
-    if ($json === false) {
+    if ($json == false) {
         return null; // Item introuvable
     }
     return json_decode($json, true);
@@ -74,22 +74,26 @@ function getItem($itemName){
 
 // Noms des statistiques en français
 function nomStat($stat) {
-    $noms = [
+    $noms = array(
         'hp'              => 'PV',
         'attack'          => 'Attaque',
         'defense'         => 'Défense',
         'special-attack'  => 'Att. Spé.',
         'special-defense' => 'Déf. Spé.',
         'speed'           => 'Vitesse',
-    ];
-    return $noms[$stat] ?? $stat;
+    );
+    if(isset($noms[$stat])) {
+        return $noms[$stat];
+    } else {
+        return $stat;
+    }
 }
 
 // Si l'utilisateur a soumis une recherche
 if (!empty($_GET['pokemon'])) {
     $data = getPokemon($_GET['pokemon']);
 
-    if ($data === null) {
+    if ($data == null) {
         echo '<p class="error">❌ Pokémon introuvable. Vérifiez l\'orthographe ou le numéro.</p>';
     } else {
         $nom    = $data['name'];
@@ -103,19 +107,19 @@ if (!empty($_GET['pokemon'])) {
 
         <div class="pokemon-card">
             <p class="pokemon-id">#<?php echo str_pad($id, 3, '0', STR_PAD_LEFT) ?></p>
-            <h2><?php $nom ?></h2>
+            <h2><?php echo $nom ?></h2>
 
-            <?php if ($sprite): ?>
-                <img src="<?php echo $sprite ?>" alt="<?php  echo $nom ?>">
-            <?php endif; ?>
+            <?php if ($sprite) { ?>
+                <img src="<?php echo $sprite ?>" alt="<?php echo $nom ?>">
+            <?php } ?>
 
             <!-- Types -->
             <div class="types">
-                <?php foreach ($types as $t): ?>
+                <?php foreach ($types as $t) { ?>
                     <span class="type type-<?php echo $t['type']['name'] ?>">
                         <?php echo $t['type']['name'] ?>
                     </span>
-                <?php endforeach; ?>
+                <?php } ?>
             </div>
 
             <!-- Taille et poids -->
@@ -130,14 +134,14 @@ if (!empty($_GET['pokemon'])) {
                 </div>
                 <div class="info-item">
                     <span>Expérience</span>
-                    <strong><?php echo $data['base_experience'] ?? '?' ?></strong>
+                    <strong><?php if(isset($data['base_experience'])) { echo $data['base_experience']; } else { echo '?'; } ?></strong>
                 </div>
             </div>
 
             <!-- Statistiques -->
             <div class="stats">
                 <h3>Statistiques</h3>
-                <?php foreach ($stats as $stat): ?>
+                <?php foreach ($stats as $stat) { ?>
                     <?php $valeur = $stat['base_stat']; ?>
                     <div class="stat">
                         <span class="stat-name"><?php echo nomStat($stat['stat']['name']) ?></span>
@@ -146,7 +150,7 @@ if (!empty($_GET['pokemon'])) {
                         </div>
                         <span class="stat-value"><?php echo $valeur ?></span>
                     </div>
-                <?php endforeach; ?>
+                <?php } ?>
             </div>
         </div>
 
@@ -162,24 +166,21 @@ if ($listeJson) {
     <div class="grid-section">
         <h2>Les Pokémon</h2>
         <div class="pokemon-grid">
-            <?php foreach ($liste['results'] as $index => $p):
+            <?php foreach ($liste['results'] as $index => $p) {
                 $numero = $index + 1;
-                
-                if (isset($_GET['sprite']) && $_GET['sprite']==='gif') {
-                    $spriteUrl = "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/showdown/" . $numero . ".gif";
 
+                if (isset($_GET['sprite']) && $_GET['sprite'] === 'gif') {
+                    $spriteUrl = "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/showdown/" . $numero . ".gif";
                 } else {
                     $spriteUrl = "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/" . $numero . ".png";
-
                 }
-
             ?>
                 <a class="mini-card" href="?pokemon=<?php echo $p['name'] ?>">
                     <img src="<?php echo $spriteUrl ?>" alt="<?php echo $p['name'] ?>">
                     <p>#<?php echo str_pad($numero, 3, '0', STR_PAD_LEFT) ?></p>
                     <strong><?php echo $p['name'] ?></strong>
                 </a>
-            <?php endforeach; ?>
+            <?php } ?>
         </div>
     </div>
     <?php

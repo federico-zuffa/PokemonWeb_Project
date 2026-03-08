@@ -1,0 +1,9 @@
+{ //Json crée automatiquement par l'extension vscode "cSpell" permettant de corriger l'orthographe du code
+    "cSpell.words": [
+        "bulbasaur",
+        "pikachu",
+        "Pokedex",
+        "Pokédex",
+        "pokemon"
+    ]
+}
