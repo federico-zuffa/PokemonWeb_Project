@@ -12,9 +12,6 @@
 <?php
 ini_set('display_errors', 1);
 error_reporting(E_ALL);
-// ============================================================
-// Chargement des dépendances
-// ============================================================
 session_start();
 
 require_once 'fonctions/api.php';
@@ -90,8 +87,8 @@ if (!empty($_GET['pokemon'])) {
     } else {
         $nom    = $data['name'];
         $id     = $data['id'];
-        $poids  = $data['weight'] / 10;
-        $taille = $data['height'] / 10;
+        $poids  = $data['weight'] / 10; //(kg)
+        $taille = $data['height'] / 10; //(m)
         $types  = $data['types'];
         $stats  = $data['stats'];
 
