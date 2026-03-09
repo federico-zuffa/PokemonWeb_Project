@@ -4,92 +4,84 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Mon Pokédex</title>
-    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="styleClaude.css">
     <link rel="icon" type="image/svg+xml" href="./Ressources/PokeBall_icon.ico">
 </head>
 <body>
 
-<header>
-    <h1><a href="index.php"> Mon Pokedex </a></h1>
-    <p>Recherchez un Pokémon par nom ou numéro</p>
-</header>
+<?php
+ini_set('display_errors', 1);
+error_reporting(E_ALL);
+// ============================================================
+// Chargement des dépendances
+// ============================================================
+session_start();
 
-<!-- Formulaire de recherche -->
-<div class="search-bar">
-    <form method="GET" action="" style="display:flex; gap:10px;">
-        <input
-            type="text"
-            name="pokemon"
-            placeholder="Ex: pikachu, 25, bulbasaur..."
-            value="<?php if(isset($_GET['pokemon'])) { echo $_GET['pokemon']; } ?>"
-        >
-        <button type="submit">Rechercher</button>
-    </form>
-</div>
-<div class="search-bar">
-    <form method="GET" action="">
-        <?php
-            if(!empty($_GET['pokemon'])) {
-                echo '<input type="hidden" name="pokemon" value="' . htmlspecialchars($_GET["pokemon"]) . '">';
+require_once 'fonctions/api.php';
+require_once 'fonctions/utils.php';
+
+// Initialisation des favoris en session
+if (!isset($_SESSION['favoris'])) {
+    $_SESSION['favoris'] = array();
+}
+
+// ============================================================
+// GESTION DES FAVORIS (ajout / suppression via POST)
+// ============================================================
+if (isset($_POST['action']) && isset($_POST['pokemon_nom'])) {
+    $nomFavori = $_POST['pokemon_nom'];
+
+    if ($_POST['action'] == 'ajouter') {
+        if (!in_array($nomFavori, $_SESSION['favoris'])) {
+            $_SESSION['favoris'][] = $nomFavori;
+        }
+    }
+
+    if ($_POST['action'] == 'supprimer') {
+        $nouveauxFav = array();
+        foreach ($_SESSION['favoris'] as $favori) {
+            if ($favori !== $nomFavori) {
+                $nouveauxFav[] = $favori;
             }
-            if(isset($_GET['sprite']) && $_GET['sprite'] === 'gif') {
-                echo "<button type='submit' name='sprite' value='png'>Afficher les PNG</button>";
-            } else {
-                echo "<button type='submit' name='sprite' value='gif'>Afficher les GIF</button>";
-            }
-        ?>
-    </form>
-</div>
+        }
+        $_SESSION['favoris'] = $nouveauxFav;
+    }
 
+    // Redirection PRG : évite la re-soumission du formulaire au rechargement
+    $redirect = '?';
+    if (!empty($_GET['pokemon'])) {
+        $redirect .= 'pokemon=' . urlencode($_GET['pokemon']) . '&';
+    }
+    if (!empty($_GET['type'])) {
+        $redirect .= 'type=' . urlencode($_GET['type']) . '&';
+    }
+    if (!empty($_GET['generation'])) {
+        $redirect .= 'generation=' . urlencode($_GET['generation']) . '&';
+    }
+    if (!empty($_GET['sprite'])) {
+        $redirect .= 'sprite=' . urlencode($_GET['sprite']);
+    }
+    header('Location: ' . $redirect);
+    exit();
+}
 
+// ============================================================
+// POKÉMON ALÉATOIRE
+// ============================================================
+if (isset($_GET['aleatoire'])) {
+    $idAleatoire = rand(1, 1025);
+    header('Location: ?pokemon=' . $idAleatoire);
+    exit();
+}
+?>
+
+<?php require_once 'includes/header.php'; ?>
+<?php require_once 'includes/filtres.php'; ?>
 
 <?php
-
-// Fonction pour appeler l'API PokeAPI
-function getPokemon($nom) {
-    $nom = strtolower(trim($nom));
-    $url = "https://pokeapi.co/api/v2/pokemon/" . urlencode($nom);
-
-    // Appel à l'API avec file_get_contents
-    $json = @file_get_contents($url);
-
-    if ($json == false) {
-        return null; // Pokémon introuvable
-    }
-
-    return json_decode($json, true);
-}
-
-function getItem($itemName) {
-    $itemName = strtolower(trim($itemName));
-    $url = "https://pokeapi.co/api/v2/item/" . urlencode($itemName);
-
-    $json = @file_get_contents($url);
-
-    if ($json == false) {
-        return null; // Item introuvable
-    }
-    return json_decode($json, true);
-}
-
-// Noms des statistiques en français
-function nomStat($stat) {
-    $noms = array(
-        'hp'              => 'PV',
-        'attack'          => 'Attaque',
-        'defense'         => 'Défense',
-        'special-attack'  => 'Att. Spé.',
-        'special-defense' => 'Déf. Spé.',
-        'speed'           => 'Vitesse',
-    );
-    if(isset($noms[$stat])) {
-        return $noms[$stat];
-    } else {
-        return $stat;
-    }
-}
-
-// Si l'utilisateur a soumis une recherche
+// ============================================================
+// AFFICHAGE DE LA CARTE D'UN POKÉMON RECHERCHÉ
+// ============================================================
 if (!empty($_GET['pokemon'])) {
     $data = getPokemon($_GET['pokemon']);
 
@@ -98,11 +90,29 @@ if (!empty($_GET['pokemon'])) {
     } else {
         $nom    = $data['name'];
         $id     = $data['id'];
-        $sprite = $data['sprites']['front_default'];
-        $poids  = $data['weight'] / 10; // en kg
-        $taille = $data['height'] / 10; // en m
+        $poids  = $data['weight'] / 10;
+        $taille = $data['height'] / 10;
         $types  = $data['types'];
         $stats  = $data['stats'];
+
+        $format = getFormatSprite();
+        if ($format === 'gif') {
+            $sprite = getSpriteUrl($id, 'gif');
+        } else {
+            $sprite = $data['sprites']['front_default'];
+        }
+
+        $estFavori = in_array($nom, $_SESSION['favoris']);
+
+        // Récupération de la chaîne d'évolution
+        $evolutions = array();
+        $species = getPokemonSpecies($id);
+        if ($species != null) {
+            $chainData = getEvolutionChain($species['evolution_chain']['url']);
+            if ($chainData != null) {
+                $evolutions = extraireEvolutions($chainData['chain']);
+            }
+        }
         ?>
 
         <div class="pokemon-card">
@@ -122,7 +132,7 @@ if (!empty($_GET['pokemon'])) {
                 <?php } ?>
             </div>
 
-            <!-- Taille et poids -->
+            <!-- Taille, poids, expérience -->
             <div class="info-row">
                 <div class="info-item">
                     <span>Taille</span>
@@ -134,9 +144,41 @@ if (!empty($_GET['pokemon'])) {
                 </div>
                 <div class="info-item">
                     <span>Expérience</span>
-                    <strong><?php if(isset($data['base_experience'])) { echo $data['base_experience']; } else { echo '?'; } ?></strong>
+                    <strong><?php if (isset($data['base_experience'])) { echo $data['base_experience']; } else { echo '?'; } ?></strong>
                 </div>
             </div>
+
+            <!-- Bouton favori -->
+            <form method="POST" action="">
+                <input type="hidden" name="pokemon_nom" value="<?php echo htmlspecialchars($nom) ?>">
+                <?php if ($estFavori) { ?>
+                    <button type="submit" name="action" value="supprimer" class="btn-favori btn-favori-actif">⭐ Retirer des favoris</button>
+                <?php } else { ?>
+                    <button type="submit" name="action" value="ajouter" class="btn-favori">☆ Ajouter aux favoris</button>
+                <?php } ?>
+            </form>
+
+            <!-- Chaîne d'évolution -->
+            <?php if (count($evolutions) > 1) { ?>
+                <div class="evolutions">
+                    <h3>Évolutions</h3>
+                    <div class="evolution-chain">
+                        <?php foreach ($evolutions as $index => $evoNom) { ?>
+                            <?php if ($index > 0) { ?>
+                                <span class="evolution-arrow">→</span>
+                            <?php } ?>
+                            <a href="?pokemon=<?php echo $evoNom ?>" class="evolution-item <?php if ($evoNom === $nom) { echo 'actif'; } ?>">
+                                <?php
+                                    $evoData = getPokemon($evoNom);
+                                    $evoId = ($evoData != null) ? $evoData['id'] : 0;
+                                ?>
+                                <img src="<?php echo getSpriteUrl($evoId, 'png') ?>" alt="<?php echo $evoNom ?>">
+                                <span><?php echo $evoNom ?></span>
+                            </a>
+                        <?php } ?>
+                    </div>
+                </div>
+            <?php } ?>
 
             <!-- Statistiques -->
             <div class="stats">
@@ -158,32 +200,99 @@ if (!empty($_GET['pokemon'])) {
     }
 }
 
-// Afficher les Pokémon en grille
-$listeJson = @file_get_contents("https://pokeapi.co/api/v2/pokemon?limit=1025");
-if ($listeJson) {
-    $liste = json_decode($listeJson, true);
-    ?>
-    <div class="grid-section">
-        <h2>Les Pokémon</h2>
-        <div class="pokemon-grid">
-            <?php foreach ($liste['results'] as $index => $p) {
-                $numero = $index + 1;
+// ============================================================
+// AFFICHAGE DE LA GRILLE AVEC FILTRES
+// ============================================================
+$format = getFormatSprite();
 
-                if (isset($_GET['sprite']) && $_GET['sprite'] === 'gif') {
-                    $spriteUrl = "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/showdown/" . $numero . ".gif";
-                } else {
-                    $spriteUrl = "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/" . $numero . ".png";
-                }
-            ?>
-                <a class="mini-card" href="?pokemon=<?php echo $p['name'] ?>">
-                    <img src="<?php echo $spriteUrl ?>" alt="<?php echo $p['name'] ?>">
-                    <p>#<?php echo str_pad($numero, 3, '0', STR_PAD_LEFT) ?></p>
-                    <strong><?php echo $p['name'] ?></strong>
-                </a>
-            <?php } ?>
+// --- Filtre par TYPE ---
+if (!empty($_GET['type'])) {
+    $typeChoisi = strtolower(trim($_GET['type']));
+    $typeJson = @file_get_contents("https://pokeapi.co/api/v2/type/" . urlencode($typeChoisi));
+
+    if ($typeJson != false) {
+        $typeData = json_decode($typeJson, true);
+        $pokemonsType = array();
+        foreach ($typeData['pokemon'] as $entry) {
+            $pokemonsType[] = $entry['pokemon']['name'];
+        }
+        ?>
+        <div class="grid-section">
+            <h2>Pokémon de type <?php echo ucfirst($typeChoisi) ?> (<?php echo count($pokemonsType) ?>)</h2>
+            <div class="pokemon-grid">
+                <?php foreach ($pokemonsType as $nomPokemon) {
+                    $pData = getPokemon($nomPokemon);
+                    if ($pData == null) { continue; }
+                    $numero = $pData['id'];
+                    if ($numero > 1025) { continue; }
+                    $spriteUrl = getSpriteUrl($numero, $format);
+                ?>
+                    <a class="mini-card" href="?pokemon=<?php echo $nomPokemon ?>&type=<?php echo $typeChoisi ?>">
+                        <img src="<?php echo $spriteUrl ?>" alt="<?php echo $nomPokemon ?>">
+                        <p>#<?php echo str_pad($numero, 3, '0', STR_PAD_LEFT) ?></p>
+                        <strong><?php echo $nomPokemon ?></strong>
+                    </a>
+                <?php } ?>
+            </div>
         </div>
-    </div>
-    <?php
+        <?php
+    }
+
+// --- Filtre par GÉNÉRATION ---
+} else if (!empty($_GET['generation'])) {
+    $genChoisie = $_GET['generation'];
+    $plage = getPokemonParGeneration($genChoisie);
+
+    if ($plage != null) {
+        $limit = $plage['fin'] - $plage['debut'] + 1;
+        $offset = $plage['debut'] - 1;
+        $listeJson = @file_get_contents("https://pokeapi.co/api/v2/pokemon?limit=" . $limit . "&offset=" . $offset);
+
+        if ($listeJson) {
+            $liste = json_decode($listeJson, true);
+            ?>
+            <div class="grid-section">
+                <h2>Génération <?php echo $genChoisie ?> — #<?php echo $plage['debut'] ?> à #<?php echo $plage['fin'] ?></h2>
+                <div class="pokemon-grid">
+                    <?php foreach ($liste['results'] as $index => $p) {
+                        $numero = $plage['debut'] + $index;
+                        $spriteUrl = getSpriteUrl($numero, $format);
+                    ?>
+                        <a class="mini-card" href="?pokemon=<?php echo $p['name'] ?>&generation=<?php echo $genChoisie ?>">
+                            <img src="<?php echo $spriteUrl ?>" alt="<?php echo $p['name'] ?>">
+                            <p>#<?php echo str_pad($numero, 3, '0', STR_PAD_LEFT) ?></p>
+                            <strong><?php echo $p['name'] ?></strong>
+                        </a>
+                    <?php } ?>
+                </div>
+            </div>
+            <?php
+        }
+    }
+
+// --- PAS DE FILTRE : tous les Pokémon ---
+} else {
+    $listeJson = @file_get_contents("https://pokeapi.co/api/v2/pokemon?limit=1025");
+    if ($listeJson) {
+        $liste = json_decode($listeJson, true);
+        ?>
+        <div class="grid-section">
+            <h2>Les Pokémon</h2>
+            <div class="pokemon-grid">
+                <?php foreach ($liste['results'] as $index => $p) {
+                    $numero = $index + 1;
+                    $spriteUrl = getSpriteUrl($numero, $format);
+                ?>
+                    <a class="mini-card" href="?pokemon=<?php echo $p['name'] ?>">
+                        <img src="<?php echo $spriteUrl ?>" alt="<?php echo $p['name'] ?>">
+                        <p>#<?php echo str_pad($numero, 3, '0', STR_PAD_LEFT) ?></p>
+                        <strong><?php echo $p['name'] ?></strong>
+                    </a>
+                <?php } ?>
+            </div>
+        </div>
+        <?php
+    }
 }
 ?>
 

@@ -23,7 +23,7 @@ header h1 {
     letter-spacing: 2px;
 }
 
-header a{
+header a {
     text-decoration: none;
     color: inherit;
 }
@@ -37,8 +37,9 @@ header p {
 .search-bar {
     display: flex;
     justify-content: center;
-    padding: 30px 20px;
+    padding: 20px 20px 0 20px;
     gap: 10px;
+    flex-wrap: wrap;
 }
 
 .search-bar input {
@@ -54,7 +55,8 @@ header p {
     border-color: #e3350d;
 }
 
-.search-bar button {
+.search-bar button,
+.search-bar .btn {
     padding: 12px 25px;
     background-color: #e3350d;
     color: white;
@@ -62,18 +64,119 @@ header p {
     border-radius: 25px;
     font-size: 1em;
     cursor: pointer;
+    text-decoration: none;
+    display: inline-block;
 }
 
-.search-bar button:hover {
+.search-bar button:hover,
+.search-bar .btn:hover {
     background-color: #b52a0a;
 }
 
+/* Bouton générique réutilisable */
+.btn {
+    padding: 12px 25px;
+    background-color: #e3350d;
+    color: white;
+    border: none;
+    border-radius: 25px;
+    font-size: 1em;
+    cursor: pointer;
+    text-decoration: none;
+    display: inline-block;
+}
+
+.btn:hover {
+    background-color: #b52a0a;
+}
+
+.btn-favoris {
+    background-color: #f0a500;
+}
+
+.btn-favoris:hover {
+    background-color: #c98800;
+}
+
+/* ============================================================
+   FILTRES
+   ============================================================ */
+.filtres {
+    max-width: 960px;
+    margin: 20px auto 10px auto;
+    padding: 0 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.filtre-groupe {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+
+.filtre-groupe strong {
+    padding-top: 6px;
+    white-space: nowrap;
+    min-width: 90px;
+}
+
+.filtre-boutons {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+}
+
+.filtre-btn {
+    padding: 5px 14px;
+    border-radius: 20px;
+    font-size: 0.85em;
+    text-decoration: none;
+    background-color: #ddd;
+    color: #333;
+    font-weight: bold;
+    transition: opacity 0.2s;
+}
+
+.filtre-btn:hover {
+    opacity: 0.8;
+}
+
+.filtre-btn.actif {
+    outline: 3px solid #333;
+}
+
+/* Couleurs des boutons de filtre par type */
+.filtre-btn.type-fire     { background-color: #F08030; color: white; }
+.filtre-btn.type-water    { background-color: #6890F0; color: white; }
+.filtre-btn.type-grass    { background-color: #78C850; color: white; }
+.filtre-btn.type-electric { background-color: #F8D030; color: #333; }
+.filtre-btn.type-psychic  { background-color: #F85888; color: white; }
+.filtre-btn.type-ice      { background-color: #98D8D8; color: #333; }
+.filtre-btn.type-dragon   { background-color: #7038F8; color: white; }
+.filtre-btn.type-dark     { background-color: #705848; color: white; }
+.filtre-btn.type-fairy    { background-color: #EE99AC; color: #333; }
+.filtre-btn.type-normal   { background-color: #A8A878; color: white; }
+.filtre-btn.type-fighting { background-color: #C03028; color: white; }
+.filtre-btn.type-flying   { background-color: #A890F0; color: white; }
+.filtre-btn.type-poison   { background-color: #A040A0; color: white; }
+.filtre-btn.type-ground   { background-color: #E0C068; color: #333; }
+.filtre-btn.type-rock     { background-color: #B8A038; color: white; }
+.filtre-btn.type-bug      { background-color: #A8B820; color: white; }
+.filtre-btn.type-ghost    { background-color: #705898; color: white; }
+.filtre-btn.type-steel    { background-color: #B8B8D0; color: #333; }
+
+/* ============================================================
+   CARTE POKÉMON
+   ============================================================ */
 .pokemon-card {
     background: white;
     border-radius: 15px;
     padding: 30px;
-    max-width: 400px;
-    margin: 0 auto 40px auto;
+    max-width: 450px;
+    margin: 20px auto 40px auto;
     text-align: center;
     box-shadow: 0 4px 15px rgba(0,0,0,0.1);
 }
@@ -112,7 +215,6 @@ header p {
     text-transform: capitalize;
 }
 
-/* Couleurs par type */
 .type-fire     { background-color: #F08030; }
 .type-water    { background-color: #6890F0; }
 .type-grass    { background-color: #78C850; }
@@ -203,6 +305,102 @@ header p {
     font-size: 1em;
 }
 
+/* ============================================================
+   BOUTON FAVORI
+   ============================================================ */
+.btn-favori {
+    padding: 10px 22px;
+    border-radius: 25px;
+    border: 2px solid #f0a500;
+    background: white;
+    color: #f0a500;
+    font-size: 0.95em;
+    cursor: pointer;
+    margin-top: 15px;
+    font-weight: bold;
+}
+
+.btn-favori:hover {
+    background: #f0a500;
+    color: white;
+}
+
+.btn-favori-actif {
+    background: #f0a500;
+    color: white;
+}
+
+.btn-favori-actif:hover {
+    background: #c98800;
+    border-color: #c98800;
+}
+
+/* ============================================================
+   CHAÎNE D'ÉVOLUTION
+   ============================================================ */
+.evolutions {
+    margin-top: 25px;
+    border-top: 1px solid #eee;
+    padding-top: 20px;
+}
+
+.evolutions h3 {
+    margin-bottom: 15px;
+    font-size: 1.1em;
+    color: #555;
+}
+
+.evolution-chain {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+
+.evolution-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-decoration: none;
+    color: #333;
+    padding: 8px;
+    border-radius: 10px;
+    background: #f9f9f9;
+    border: 2px solid transparent;
+    transition: border-color 0.2s;
+    min-width: 80px;
+}
+
+.evolution-item:hover {
+    border-color: #e3350d;
+}
+
+.evolution-item.actif {
+    border-color: #e3350d;
+    background: #fff3f0;
+}
+
+.evolution-item img {
+    width: 70px;
+    height: 70px;
+    image-rendering: pixelated;
+}
+
+.evolution-item span {
+    font-size: 0.8em;
+    text-transform: capitalize;
+    margin-top: 4px;
+}
+
+.evolution-arrow {
+    font-size: 1.5em;
+    color: #aaa;
+}
+
+/* ============================================================
+   GRILLE
+   ============================================================ */
 .error {
     text-align: center;
     color: #e3350d;
@@ -211,8 +409,8 @@ header p {
 }
 
 .grid-section {
-    max-width: 900px;
-    margin: 0 auto 60px auto;
+    max-width: 960px;
+    margin: 20px auto 60px auto;
     padding: 0 20px;
 }
 
@@ -225,7 +423,7 @@ header p {
 
 .pokemon-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+    grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
     gap: 15px;
 }
 
@@ -243,6 +441,11 @@ header p {
 .mini-card:hover {
     transform: translateY(-4px);
     box-shadow: 0 6px 15px rgba(0,0,0,0.15);
+}
+
+.mini-card a {
+    text-decoration: none;
+    color: #333;
 }
 
 .mini-card img {
