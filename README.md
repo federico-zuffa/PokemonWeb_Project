@@ -1,4 +1,4 @@
-# 🔴 Mon PasserелDex — Documentation
+# 🔴 Mon PasserеlleDex — Documentation
 
 **Application web de consultation de Pokémon**  
 Federico Zuffa | Classe Passerelle | 2026
